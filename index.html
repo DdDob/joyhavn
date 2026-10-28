@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Joyhavn: pay for tools only when you need them</title>
+  <meta name="description" content="Pay-per-request tools on Solana using x402. No subscription, no checkout." />
+  <meta name="theme-color" content="#060a09" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23060a09'/%3E%3Ctext x='8' y='24' font-family='Arial' font-weight='800' font-size='24' fill='%23b8f23d'%3EJ%3C/text%3E%3Ccircle cx='24' cy='23' r='2.4' fill='%23b8f23d'/%3E%3C/svg%3E" />
+  <style>
+:root {
+  --bg: #060a09;
+  --side: #08100e;
+  --panel: #0a1311;
+  --panel-2: #0d1815;
+  --line: #15231f;
+  --line-2: #1e322c;
+  --text: #f2f7f4;
+  --muted: #8da39b;
+  --lime: #b8f23d;
+  --lime-ink: #0b1403;
+  --lime-soft: rgba(184, 242, 61, 0.1);
+  --green: #3fe08a;
+  --red: #ff5f6d;
+  --red-soft: rgba(255, 95, 109, 0.12);
+  --amber: #ffc24d;
+  --radius: 16px;
+  --font: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+body { min-height: 100vh; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--lime); text-decoration: none; }
+a:hover { text-decoration: underline; }
+svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: 272px minmax(0, 1fr); min-height: 100vh; }
+
+/* ---------- Sidebar ---------- */
+.sidebar { background: var(--side); border-right: 1px solid var(--line); padding: 26px 20px 20px; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 0; height: 100vh; z-index: 30; }
+.brand { display: flex; align-items: center; gap: 12px; padding: 0 6px; color: var(--text); }
+.brand:hover { text-decoration: none; }
+.brand-mark { position: relative; font-weight: 800; font-size: 34px; line-height: 1; color: var(--lime); letter-spacing: -0.04em; }
+.brand-mark i { position: absolute; right: -7px; bottom: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--lime); }
+.brand-name { font-weight: 700; font-size: 25px; letter-spacing: -0.03em; margin-left: 4px; }
+.nav { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.nav a { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-radius: 12px; color: #c4d3cd; font-weight: 500; font-size: 16px; }
+.nav a svg { width: 22px; height: 22px; flex: none; }
+.nav a:hover { background: var(--panel); text-decoration: none; color: var(--text); }
+.nav a.active { background: var(--lime); color: var(--lime-ink); font-weight: 650; }
+.side-foot { margin-top: auto; }
+.net-card { border: 1px solid var(--line); background: var(--panel); border-radius: 14px; overflow: hidden; }
+.net-row { display: flex; align-items: center; gap: 9px; padding: 13px 14px; font-size: 13.5px; white-space: nowrap; }
+.net-row #net-name { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.dot.on { background: var(--green); box-shadow: 0 0 9px var(--green); }
+.badge { margin-left: auto; flex: none; font-size: 11.5px; padding: 3px 10px; border-radius: 999px; background: var(--lime-soft); color: var(--lime); border: 1px solid rgba(184, 242, 61, 0.3); }
+.badge.off { background: var(--red-soft); color: var(--red); border-color: rgba(255, 95, 109, 0.3); }
+.net-wallet { border-top: 1px solid var(--line); padding: 12px 14px; display: flex; align-items: center; gap: 10px; font-size: 14px; min-height: 58px; }
+.chain { width: 34px; height: 34px; border-radius: 50%; background: #0d1a16; border: 1px solid var(--line-2); display: grid; place-items: center; flex: none; color: var(--lime); }
+.chain svg { width: 18px; height: 18px; }
+.copy { margin-left: auto; background: none; border: 0; color: var(--muted); padding: 4px; border-radius: 6px; display: grid; }
+.copy:hover { color: var(--text); }
+.copy svg { width: 17px; height: 17px; }
+.mono { font-family: var(--mono); }
+
+/* ---------- Top bar ---------- */
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 100vh; }
+.topbar { display: flex; align-items: center; gap: 16px; padding: 18px 36px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(6, 10, 9, 0.88); backdrop-filter: blur(10px); z-index: 20; }
+.search { flex: 1 1 0; min-width: 0; max-width: 740px; display: flex; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 14px; padding: 0 14px; height: 46px; color: var(--muted); }
+.search svg { width: 19px; height: 19px; flex: none; }
+.search input { flex: 1; min-width: 0; width: 100%; background: none; border: 0; outline: none; color: var(--text); height: 100%; }
+.search input::placeholder { color: var(--muted); }
+.search:focus-within { border-color: var(--lime); }
+.search kbd { font-family: var(--font); font-size: 12px; border: 1px solid var(--line-2); border-radius: 7px; padding: 2px 8px; color: var(--muted); }
+.top-right { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.icon-btn { position: relative; width: 42px; height: 42px; background: none; border: 0; border-radius: 12px; color: #cbd9d3; display: grid; place-items: center; }
+.icon-btn:hover { background: var(--panel); }
+.icon-btn svg { width: 22px; height: 22px; }
+.ping { position: absolute; top: 8px; right: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 2px var(--bg); }
+.profile { display: flex; align-items: center; gap: 11px; color: var(--text); padding: 4px 6px; border-radius: 12px; }
+.profile:hover { background: var(--panel); text-decoration: none; }
+.avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #17382c, #0c1f19); border: 1px solid var(--line-2); display: grid; place-items: center; font-weight: 700; color: var(--lime); }
+.who { display: grid; line-height: 1.25; }
+.who b { font-size: 14px; font-weight: 600; }
+.who small { color: var(--muted); font-size: 12px; font-family: var(--mono); }
+.menu-btn { display: none; }
+
+/* ---------- Content ---------- */
+.content { padding: 34px 36px 40px; flex: 1; width: 100%; max-width: 1480px; outline: none; }
+.loading { color: var(--muted); padding: 60px 0; }
+.page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
+h1 { font-size: 40px; letter-spacing: -0.035em; line-height: 1.1; font-weight: 700; }
+h2 { font-size: 22px; letter-spacing: -0.02em; font-weight: 650; }
+h3 { font-size: 17px; font-weight: 600; }
+.sub { color: #b4c7bf; font-size: 19px; margin-top: 6px; }
+.muted { color: var(--muted); }
+.btn { border: 0; border-radius: 12px; padding: 12px 18px; font-weight: 650; display: inline-flex; align-items: center; justify-content: center; gap: 10px; white-space: nowrap; }
+.btn svg { width: 20px; height: 20px; }
+.btn.lime { background: var(--lime); color: var(--lime-ink); }
+.btn.lime:hover { filter: brightness(1.07); text-decoration: none; }
+.btn.lime[disabled] { opacity: 0.55; cursor: progress; }
+.btn.ghost { background: transparent; border: 1px solid var(--line-2); color: #c4d3cd; font-weight: 550; }
+.btn.ghost:hover { border-color: #2c4a40; color: var(--text); }
+.btn.danger { background: var(--red-soft); color: var(--red); border: 1px solid rgba(255, 95, 109, 0.3); }
+.btn.sm { padding: 9px 16px; font-size: 13px; border-radius: 10px; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin-bottom: 26px; }
+.stat { padding: 22px 24px; }
+.ico { width: 46px; height: 46px; border-radius: 12px; background: var(--lime-soft); border: 1px solid rgba(184, 242, 61, 0.18); display: grid; place-items: center; color: var(--lime); flex: none; }
+.ico svg { width: 23px; height: 23px; }
+.stat .ico { margin-bottom: 18px; }
+.stat .label { font-size: 17px; color: #d9e6e0; }
+.stat .value { font-size: 36px; font-weight: 700; letter-spacing: -0.03em; margin: 2px 0 4px; font-variant-numeric: tabular-nums; }
+.stat .hint { font-size: 13px; color: var(--muted); }
+.stat .hint b { color: var(--green); font-weight: 600; }
+
+.two { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.panel { padding: 26px; }
+.panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+.panel-head p { color: var(--muted); font-size: 15px; margin-top: 4px; }
+.more { font-size: 14px; font-weight: 550; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.more svg { width: 16px; height: 16px; }
+
+/* Service cards */
+.svc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.svc { background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.svc:hover { border-color: var(--line-2); }
+.svc-top { display: flex; gap: 16px; align-items: flex-start; }
+.svc-top .ico { width: 54px; height: 54px; border-radius: 14px; background: #0d1d17; }
+.svc-top .ico svg { width: 27px; height: 27px; }
+.svc h3 { font-size: 17px; margin-bottom: 3px; }
+.svc p { color: var(--muted); font-size: 14px; line-height: 1.45; }
+.svc-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; }
+.price { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+.price .coin { width: 32px; height: 32px; border-radius: 50%; background: #10264f; display: grid; place-items: center; color: #5aa0ff; font-size: 11px; font-weight: 800; flex: none; }
+.price small { color: var(--muted); font-weight: 400; font-size: 13px; }
+
+/* Activity */
+.act { list-style: none; padding: 0; display: grid; }
+.act li { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto auto; gap: 14px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.act li:first-child { padding-top: 4px; }
+.act li:last-child { border-bottom: 0; padding-bottom: 0; }
+.act .t { font-weight: 600; font-size: 15px; }
+.act .d { color: var(--muted); font-size: 13px; }
+.act .when { text-align: right; font-size: 13px; color: var(--muted); }
+.act .when b { display: block; color: var(--text); font-weight: 600; font-size: 14px; }
+.pill { font-size: 12px; font-weight: 600; padding: 4px 13px; border-radius: 999px; border: 1px solid; }
+.pill.ok { color: var(--green); background: rgba(63, 224, 138, 0.1); border-color: rgba(63, 224, 138, 0.35); }
+.pill.bad { color: var(--red); background: var(--red-soft); border-color: rgba(255, 95, 109, 0.35); }
+.empty { color: var(--muted); padding: 30px 8px; text-align: center; font-size: 15px; }
+.empty b { color: var(--text); display: block; margin-bottom: 4px; font-size: 16px; }
+
+/* Tables, bars, kv */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12.5px; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.kv { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 14px 18px; font-size: 14.5px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+.bars { display: grid; gap: 16px; }
+.bar-row { display: grid; grid-template-columns: 170px minmax(0, 1fr) 110px; gap: 14px; align-items: center; font-size: 14px; }
+.bar { height: 12px; background: #0b1512; border-radius: 999px; overflow: hidden; }
+.bar > span { display: block; height: 100%; background: var(--lime); border-radius: 999px; min-width: 0; }
+.cols { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-items: end; height: 190px; padding-top: 10px; }
+.col { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 8px; height: 100%; font-size: 12px; color: var(--muted); }
+.col .stick { width: 100%; max-width: 46px; background: var(--lime); border-radius: 8px 8px 3px 3px; min-height: 3px; opacity: 0.9; }
+.col .stick.zero { background: var(--line-2); opacity: 1; }
+.col b { color: var(--text); font-weight: 600; font-size: 12px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-bottom: 22px; }
+.bal { padding: 22px 24px; }
+.bal .label { color: var(--muted); font-size: 14px; }
+.bal .value { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.note { font-size: 13px; color: var(--muted); }
+.callout { border: 1px solid rgba(255, 194, 77, 0.35); background: rgba(255, 194, 77, 0.07); color: #f5d9a0; border-radius: 12px; padding: 14px 16px; font-size: 14px; margin-bottom: 18px; }
+.callout b { color: var(--amber); }
+.stack { display: grid; gap: 22px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- Run dialog ---------- */
+dialog.run { width: min(640px, calc(100vw - 24px)); max-height: calc(100vh - 24px); background: var(--panel); color: var(--text); border: 1px solid var(--line-2); border-radius: 20px; padding: 0; overflow: hidden; margin: auto; }
+dialog.run::backdrop { background: rgba(2, 5, 4, 0.72); backdrop-filter: blur(4px); }
+.run-wrap { display: flex; flex-direction: column; max-height: calc(100vh - 24px); }
+.run-head { display: flex; gap: 16px; align-items: center; padding: 22px 24px; border-bottom: 1px solid var(--line); }
+.run-head .grow { flex: 1; min-width: 0; }
+.run-head p { color: var(--muted); font-size: 14px; }
+.run-body { padding: 22px 24px 26px; overflow-y: auto; display: grid; gap: 18px; }
+label.field { display: grid; gap: 8px; font-size: 13px; color: var(--muted); }
+textarea, input.text { width: 100%; background: #070e0c; border: 1px solid var(--line-2); border-radius: 12px; padding: 12px 14px; color: var(--text); font-family: var(--mono); font-size: 13px; resize: vertical; }
+textarea:focus, input.text:focus { outline: 2px solid rgba(184, 242, 61, 0.45); outline-offset: 1px; border-color: var(--lime); }
+.flow { display: grid; gap: 14px; border-top: 1px dashed var(--line-2); padding-top: 18px; }
+.step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; opacity: 0.4; transition: opacity 0.25s; }
+.step.active, .step.done, .step.error { opacity: 1; }
+.step .n { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line-2); display: grid; place-items: center; font-size: 12px; color: var(--muted); }
+.step.active .n { border-color: var(--lime); color: var(--lime); animation: pulse 1s infinite; }
+.step.done .n { background: var(--green); border-color: var(--green); color: #03150a; font-weight: 800; }
+.step.error .n { background: var(--red); border-color: var(--red); color: #1b0408; font-weight: 800; }
+.step .t { font-weight: 600; font-size: 15px; }
+.step .d { color: var(--muted); font-size: 13.5px; overflow-wrap: anywhere; }
+.step code { font-family: var(--mono); font-size: 12px; color: #cde3d9; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 5px rgba(184, 242, 61, 0.15); } }
+.result { border: 1px solid var(--line-2); background: #070e0c; border-radius: 14px; padding: 16px; margin-top: 10px; display: grid; gap: 10px; }
+.result .headline { font-size: 16px; font-weight: 600; }
+.result .headline.good { color: var(--green); }
+.result .headline.bad { color: var(--red); }
+.result .headline.warn { color: var(--amber); }
+.result p { color: #d4e4dc; font-size: 14.5px; line-height: 1.55; }
+.result ul { margin: 0; padding-left: 18px; color: #c4d3cd; font-size: 14px; display: grid; gap: 4px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { font-size: 12.5px; padding: 4px 11px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line-2); color: #c4d3cd; }
+pre.json { background: #050a08; border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow: auto; max-height: 220px; font-family: var(--mono); font-size: 12px; color: #d3e8dd; }
+details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.err { color: var(--red); }
+
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: #10201b; border: 1px solid var(--line-2); padding: 11px 18px; border-radius: 12px; font-size: 14px; z-index: 100; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); }
+
+.foot { display: flex; justify-content: space-between; gap: 12px; padding: 20px 36px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; flex-wrap: wrap; }
+.foot-l { display: inline-flex; align-items: center; gap: 10px; }
+.foot-l i { font-style: normal; }
+.sol { width: 20px; height: 20px; stroke: none; fill: var(--lime); }
+
+.scrim { display: none; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1180px) {
+  .two { grid-template-columns: minmax(0, 1fr); }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .sidebar { position: fixed; inset: 0 auto 0 0; width: 285px; transform: translateX(-102%); transition: transform 0.22s ease; box-shadow: 0 0 40px rgba(0, 0, 0, 0.6); }
+  .app.open .sidebar { transform: none; }
+  .app.open .scrim { display: block; position: fixed; inset: 0; background: rgba(2, 5, 4, 0.6); z-index: 25; }
+  .menu-btn { display: grid; }
+  .topbar { padding: 12px 16px; gap: 10px; }
+  .search kbd, .who { display: none; }
+  .top-right { gap: 6px; }
+  .content { padding: 22px 16px 32px; }
+  .foot { padding: 18px 16px; }
+  h1 { font-size: 30px; }
+  .sub { font-size: 16px; }
+  .page-head .btn { width: 100%; }
+}
+@media (max-width: 640px) {
+  .svc-grid { grid-template-columns: minmax(0, 1fr); }
+  .stats { gap: 12px; }
+  .stat { padding: 16px; }
+  .stat .value { font-size: 26px; }
+  .stat .label { font-size: 14px; }
+  .stat .ico { width: 38px; height: 38px; margin-bottom: 12px; }
+  .panel { padding: 18px; }
+  .act li { grid-template-columns: 40px minmax(0, 1fr) auto; }
+  .act .when { grid-column: 2 / 4; text-align: left; display: flex; gap: 8px; align-items: baseline; }
+  .act .when b { display: inline; }
+  .act .pill { grid-row: 1; grid-column: 3; }
+  .kv { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .kv dd { margin-bottom: 12px; }
+  .bar-row { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .run-head, .run-body { padding-left: 16px; padding-right: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .step.active .n { animation: none; } .sidebar { transition: none; } }
+
+</style>
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#/home" aria-label="Joyhavn home">
+        <span class="brand-mark">J<i></i></span>
+        <span class="brand-name">joyhavn</span>
+      </a>
+      <nav class="nav" id="nav"></nav>
+      <div class="side-foot">
+        <div class="net-card">
+          <div class="net-row"><span class="dot" id="net-dot"></span><span id="net-name">Solana Network</span><span class="badge" id="net-badge">…</span></div>
+          <div class="net-wallet" id="net-wallet"></div>
+        </div>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" id="menu-btn" aria-label="Open menu" aria-controls="sidebar">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <label class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="search" type="search" placeholder="Search services, tools or anything..." autocomplete="off" />
+          <kbd>⌘ K</kbd>
+        </label>
+        <div class="top-right">
+          <button class="icon-btn" id="bell" aria-label="Notifications" title="Latest activity">
+            <svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0"/></svg>
+            <span class="ping" id="ping" hidden></span>
+          </button>
+          <a class="profile" href="#/settings">
+            <span class="avatar">B</span>
+            <span class="who"><b>Builder</b><small id="who-addr">devnet</small></span>
+          </a>
+        </div>
+      </header>
+      <main class="content" id="content" tabindex="-1" aria-live="polite">
+        <div class="loading">Loading Joyhavn…</div>
+      </main>
+      <footer class="foot">
+        <span class="foot-l"><svg viewBox="0 0 24 24" class="sol"><path d="M5 8h13l-2 2.5H3zM5 13.5h13l-2 2.5H3zM8 19h13l-2-2.5H6z"/></svg> Powered by Solana <i>•</i> x402</span>
+        <span>Joyhavn v1.0.0</span>
+      </footer>
+    </div>
+  </div>
+
+  <dialog id="run" class="run" aria-labelledby="run-title"></dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script type="module">
+// Joyhavn front end: plain ES modules, no build step, hash routing (works on any static host).
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const short = (a, n = 4) => (a && a.length > 2 * n + 2 ? `${a.slice(0, n)}…${a.slice(-n)}` : a || '');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const usd = (n, d = 3) => `$${Number(n || 0).toFixed(d)}`;
+const nf = (n, o = {}) => new Intl.NumberFormat('en-US', o).format(n);
+
+/* ---------------- icons ---------------- */
+const I = {
+  home: '<path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  wallet: '<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/>',
+  doc: '<path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6"/>',
+  db: '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
+  code: '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/>',
+  bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  check: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+  sol: '<path d="M5 8h13l-2 2.5H3zM5 13.5h13l-2 2.5H3zM8 19h13l-2-2.5H6z"/>',
+  cash: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
+};
+const svg = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${I[n] || I.bolt}</svg>`;
+
+/* ---------------- state ---------------- */
+const state = { config: null, services: [], query: '', route: 'home' };
+const KEY = 'joyhavn.history.v1';
+const SEEN = 'joyhavn.seen.v1';
+let memHistory = [];
+const store = {
+  get(k, fb) {
+    try {
+      const v = localStorage.getItem(k);
+      return v ? JSON.parse(v) : fb;
+    } catch {
+      return k === KEY ? memHistory : fb;
+    }
+  },
+  set(k, v) {
+    if (k === KEY) memHistory = v;
+    try {
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {
+      /* private mode: keep in memory only */
+    }
+  },
+};
+const history = () => store.get(KEY, []);
+const addHistory = (e) => store.set(KEY, [{ at: new Date().toISOString(), ...e }, ...history()].slice(0, 100));
+
+function totals() {
+  const h = history();
+  const paid = h.filter((e) => e.status === 'paid');
+  const failed = h.filter((e) => e.status === 'failed');
+  return {
+    spent: paid.reduce((n, e) => n + (e.priceUsd || 0), 0),
+    requests: h.length,
+    paid: paid.length,
+    failed: failed.length,
+    rate: h.length ? (paid.length / h.length) * 100 : null,
+  };
+}
+
+function ago(iso) {
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 45) return 'just now';
+  if (s < 3600) return `${Math.round(s / 60)}m ago`;
+  if (s < 86400) return `${Math.round(s / 3600)}h ago`;
+  return `${Math.round(s / 86400)}d ago`;
+}
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(body.error || res.statusText || 'Request failed'), { status: res.status });
+  return body;
+}
+
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => (t.hidden = true), 2600);
+}
+
+const txLink = (sig) =>
+  sig ? `<a class="mono" target="_blank" rel="noopener" href="https://explorer.solana.com/tx/${esc(sig)}?cluster=devnet">${esc(short(sig, 6))} ↗</a>` : '<span class="muted">pending</span>';
+const addrLink = (a) =>
+  a ? `<a class="mono" target="_blank" rel="noopener" href="https://explorer.solana.com/address/${esc(a)}?cluster=devnet">${esc(a)}</a>` : '<span class="muted">not set</span>';
+
+/* ---------------- chrome (sidebar, status) ---------------- */
+const NAV = [
+  ['home', 'Home', 'home'],
+  ['services', 'Services', 'grid'],
+  ['activity', 'Activity', 'clock'],
+  ['wallet', 'Wallet', 'wallet'],
+  ['analytics', 'Analytics', 'chart'],
+  ['settings', 'Settings', 'gear'],
+];
+
+function paintChrome() {
+  $('#nav').innerHTML = NAV.map(([id, label, ic]) => `<a href="#/${id}" data-route="${id}" ${state.route === id ? 'aria-current="page"' : ''} class="${state.route === id ? 'active' : ''}">${svg(ic)}${label}</a>`).join('');
+  const c = state.config;
+  const ok = Boolean(c?.configured);
+  $('#net-dot').className = `dot ${ok ? 'on' : ''}`;
+  $('#net-name').textContent = c?.networkName ? c.networkName.replace('Devnet', 'Network') : 'Solana Network';
+  const badge = $('#net-badge');
+  badge.textContent = ok ? 'Connected' : 'Setup needed';
+  badge.className = `badge ${ok ? '' : 'off'}`;
+  const w = c?.demoWallet;
+  $('#net-wallet').innerHTML = w
+    ? `<span class="chain">${svg('sol')}</span><span class="mono">${esc(short(w))}</span><button class="copy" data-copy="${esc(w)}" aria-label="Copy wallet address">${svg('copy')}</button>`
+    : `<span class="chain">${svg('wallet')}</span><span class="muted">No demo wallet yet</span>`;
+  $('#who-addr').textContent = w ? short(w, 3) : 'devnet';
+  const h = history();
+  $('#ping').hidden = !(h[0] && h[0].at > store.get(SEEN, ''));
+}
+
+/* ---------------- shared pieces ---------------- */
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+}
+
+function statsHtml() {
+  const t = totals();
+  const cards = [
+    ['wallet', 'Total Spent', usd(t.spent), `<b>${t.paid}</b> settled payment${t.paid === 1 ? '' : 's'} (USDC)`],
+    ['bolt', 'Requests Made', nf(t.requests), t.requests ? `<b>${t.paid}</b> unlocked, ${t.failed} rejected` : 'on this device'],
+    ['grid', 'Active Services', state.services.length, 'all live on Solana devnet'],
+    ['check', 'Success Rate', t.rate === null ? '–' : `${t.rate.toFixed(1)}%`, t.rate === null ? 'run a service to see this' : 'paid vs rejected'],
+  ];
+  return cards.map(([ic, label, value, hint]) => `<div class="card stat"><div class="ico">${svg(ic)}</div><div class="label">${label}</div><div class="value">${value}</div><div class="hint">${hint}</div></div>`).join('');
+}
+
+const svcCard = (s) => `
+  <article class="svc">
+    <div class="svc-top">
+      <div class="ico">${svg(s.icon)}</div>
+      <div><h3>${esc(s.name)}</h3><p>${esc(s.description)}</p></div>
+    </div>
+    <div class="svc-foot">
+      <div class="price"><span class="coin">$</span><span>${esc(s.price)} <small>USDC</small></span></div>
+      <button class="btn lime sm" data-run="${esc(s.id)}">Pay &amp; Run</button>
+    </div>
+  </article>`;
+
+function activityList(entries) {
+  if (!entries.length) return '<div class="empty"><b>No activity yet</b>Run a service and it shows up here.</div>';
+  return `<ul class="act">${entries
+    .map((e) => {
+      const s = state.services.find((x) => x.id === e.service);
+      return `<li>
+        <div class="ico" style="width:46px;height:46px">${svg(s?.icon || 'bolt')}</div>
+        <div><div class="t">${esc(e.name || s?.name || e.service)}</div><div class="d">${e.status === 'paid' ? 'Unlocked 1 request' : 'Payment rejected'}</div></div>
+        <div class="when"><span>${esc(ago(e.at))}</span><b>${usd(e.priceUsd)} USDC</b></div>
+        <span class="pill ${e.status === 'paid' ? 'ok' : 'bad'}">${e.status === 'paid' ? 'Success' : 'Failed'}</span>
+      </li>`;
+    })
+    .join('')}</ul>`;
+}
+
+/* ---------------- pages ---------------- */
+function pageHome() {
+  const h = history().slice(0, 5);
+  const w = state.config?.demoWallet;
+  return `
+    <div class="page-head">
+      <div><h1>${greeting()}, builder</h1><p class="sub">Pay for tools only when you need them.</p></div>
+      <a class="btn lime" href="#/wallet">${svg('wallet')}${w ? 'Demo Wallet' : 'Set up Wallet'}</a>
+    </div>
+    <section class="stats">${statsHtml()}</section>
+    <div class="two">
+      <section class="card panel">
+        <div class="panel-head"><div><h2>Explore Services</h2><p>Choose a service, pay with USDC on Solana, and get results instantly.</p></div><a class="more" href="#/services">View all services ${svg('arrow')}</a></div>
+        <div class="svc-grid">${state.services.map(svcCard).join('')}</div>
+      </section>
+      <section class="card panel">
+        <div class="panel-head"><h2>Recent Activity</h2><a class="more" href="#/activity">View all ${svg('arrow')}</a></div>
+        ${activityList(h)}
+      </section>
+    </div>`;
+}
+
+function pageServices() {
+  const q = state.query.trim().toLowerCase();
+  const list = q ? state.services.filter((s) => `${s.name} ${s.description} ${s.category}`.toLowerCase().includes(q)) : state.services;
+  return `
+    <div class="page-head"><div><h1>Services</h1><p class="sub">${q ? `${list.length} result${list.length === 1 ? '' : 's'} for “${esc(state.query.trim())}”` : 'Every tool is priced per request. No subscription.'}</p></div></div>
+    <div class="svc-grid" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))">${list.map(svcCard).join('') || '<div class="card empty"><b>No services match</b>Try “url”, “json” or “market”.</div>'}</div>
+    <div class="card panel" style="margin-top:22px">
+      <h2 style="margin-bottom:12px">Call a service from your own code</h2>
+      <p class="note" style="margin-bottom:12px">Any x402 client can pay and call these endpoints directly. The 402 response tells the client the price.</p>
+      <pre class="json">${esc(`import { x402Client, wrapFetchWithPayment } from "@x402/fetch";
+import { ExactSvmScheme } from "@x402/svm/exact/client";
+
+const client = new x402Client();
+client.register("solana:*", new ExactSvmScheme(yourSigner));
+const pay = wrapFetchWithPayment(fetch, client);
+
+const res = await pay("${location.origin}/api/v1/data-snapshot?asset=solana");
+console.log(await res.json());`)}</pre>
+    </div>`;
+}
+
+function pageActivity() {
+  const h = history();
+  const rows = h
+    .map((e) => {
+      const s = state.services.find((x) => x.id === e.service);
+      return `<tr><td>${esc(new Date(e.at).toLocaleString())}</td><td>${esc(e.name || s?.name || e.service)}</td><td><span class="pill ${e.status === 'paid' ? 'ok' : 'bad'}">${e.status === 'paid' ? 'Success' : 'Failed'}</span></td><td class="num">${e.status === 'paid' ? usd(e.priceUsd) : '–'}</td><td>${e.status === 'paid' ? txLink(e.transaction) : ''}</td></tr>`;
+    })
+    .join('');
+  return `
+    <div class="page-head"><div><h1>Activity</h1><p class="sub">Your payments and results on this device.</p></div>${h.length ? '<button class="btn ghost" data-clear>Clear history</button>' : ''}</div>
+    <section class="stats">${statsHtml()}</section>
+    <div class="card panel table-wrap">${rows ? `<table><thead><tr><th>Time</th><th>Service</th><th>Status</th><th class="num">Amount</th><th>Transaction</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="empty"><b>No activity yet</b>Run a service from Home or Services.</div>'}</div>
+    <p class="note" style="margin-top:12px">History is stored in this browser only. Settled payments link to their transaction on Solana Explorer.</p>`;
+}
+
+function pageWallet() {
+  return `
+    <div class="page-head"><div><h1>Wallet</h1><p class="sub">The devnet wallet that pays for your requests.</p></div><button class="btn ghost" data-refresh-wallet>Refresh balances</button></div>
+    <div id="wallet-body"><div class="loading">Reading balances from Solana devnet…</div></div>`;
+}
+
+async function fillWallet() {
+  const el = $('#wallet-body');
+  if (!el) return;
+  let w;
+  try {
+    w = await api('/api/wallet');
+  } catch (err) {
+    el.innerHTML = `<div class="callout"><b>Could not load wallet.</b> ${esc(err.message)}</div>`;
+    return;
+  }
+  if (!el.isConnected) return;
+  const b = w.balances;
+  const needUsdc = w.demoWallet && b && b.usdc < 0.05;
+  el.innerHTML = `
+    ${!w.demoWallet ? '<div class="callout"><b>No demo wallet configured.</b> Add <code>DEMO_BUYER_PRIVATE_KEY</code> in your environment variables (run <code>npm run keygen</code> to create one), then redeploy.</div>' : ''}
+    ${w.rpcError ? `<div class="callout"><b>${esc(w.rpcError)}</b> Balances may be missing. Try again in a moment.</div>` : ''}
+    ${needUsdc ? '<div class="callout"><b>Low on devnet USDC.</b> Get free test USDC at <a target="_blank" rel="noopener" href="https://faucet.circle.com">faucet.circle.com</a> (choose Solana, Devnet, USDC) and paste the wallet address below.</div>' : ''}
+    <div class="grid-3">
+      <div class="card bal"><div class="label">Demo wallet USDC</div><div class="value">${b ? nf(b.usdc, { maximumFractionDigits: 4 }) : '–'}</div><div class="note">pays for requests</div></div>
+      <div class="card bal"><div class="label">Demo wallet SOL</div><div class="value">${b ? nf(b.sol, { maximumFractionDigits: 4 }) : '–'}</div><div class="note">not needed: the facilitator covers network fees</div></div>
+      <div class="card bal"><div class="label">Merchant USDC received</div><div class="value">${w.merchantBalances ? nf(w.merchantBalances.usdc, { maximumFractionDigits: 4 }) : '–'}</div><div class="note">${w.merchantBalances && !w.merchantBalances.hasUsdcAccount ? 'No USDC account yet: fund it once from the faucet' : 'where payments land'}</div></div>
+    </div>
+    <div class="card panel"><dl class="kv">
+      <dt>Demo wallet</dt><dd>${addrLink(w.demoWallet)} ${w.demoWallet ? `<button class="copy" style="display:inline-grid;vertical-align:middle" data-copy="${esc(w.demoWallet)}" aria-label="Copy">${svg('copy')}</button>` : ''}</dd>
+      <dt>Merchant wallet</dt><dd>${addrLink(w.merchantWallet)}</dd>
+      <dt>Network</dt><dd>Solana Devnet (test money only)</dd>
+    </dl>
+    <p class="note" style="margin-top:16px">This build pays from a disposable server-side demo wallet so anyone can try the full x402 flow without installing a wallet. Never use a mainnet key here.</p></div>`;
+}
+
+function pageAnalytics() {
+  const h = history();
+  const per = state.services.map((s) => {
+    const rows = h.filter((e) => e.service === s.id);
+    const paid = rows.filter((e) => e.status === 'paid');
+    return { s, paid: paid.length, failed: rows.length - paid.length, spend: paid.reduce((n, e) => n + (e.priceUsd || 0), 0) };
+  });
+  const maxPaid = Math.max(1, ...per.map((p) => p.paid));
+  const days = [...Array(7)].map((_, i) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - (6 - i));
+    const next = new Date(d);
+    next.setDate(d.getDate() + 1);
+    const spend = h.filter((e) => e.status === 'paid' && new Date(e.at) >= d && new Date(e.at) < next).reduce((n, e) => n + (e.priceUsd || 0), 0);
+    return { label: d.toLocaleDateString('en-US', { weekday: 'short' }), spend };
+  });
+  const maxDay = Math.max(0.001, ...days.map((d) => d.spend));
+  return `
+    <div class="page-head"><div><h1>Analytics</h1><p class="sub">Where your requests and spend go.</p></div></div>
+    <section class="stats">${statsHtml()}</section>
+    <div class="stack">
+      <section class="card panel"><div class="panel-head"><h2>Spend, last 7 days</h2></div>
+        <div class="cols">${days.map((d) => `<div class="col"><b>${d.spend ? usd(d.spend) : ''}</b><div class="stick ${d.spend ? '' : 'zero'}" style="height:${d.spend ? Math.max(6, (d.spend / maxDay) * 100) : 0}%"></div><span>${esc(d.label)}</span></div>`).join('')}</div>
+      </section>
+      <section class="card panel"><div class="panel-head"><h2>Requests by service</h2></div>
+        <div class="bars">${per.map((p) => `<div class="bar-row"><span>${esc(p.s.name)}</span><div class="bar" title="${p.paid} settled, ${p.failed} rejected"><span style="width:${(p.paid / maxPaid) * 100}%"></span></div><span class="note">${p.paid} paid · ${usd(p.spend)}</span></div>`).join('')}</div>
+      </section>
+    </div>
+    <p class="note" style="margin-top:12px">Based on payments made from this browser.</p>`;
+}
+
+function pageSettings() {
+  const c = state.config || {};
+  return `
+    <div class="page-head"><div><h1>Settings</h1><p class="sub">How Joyhavn is wired to Solana.</p></div></div>
+    <div class="stack">
+      <section class="card panel"><div class="panel-head"><h2>Payments</h2></div><dl class="kv">
+        <dt>Network</dt><dd>${esc(c.networkName || 'Solana Devnet')} <span class="mono muted">${esc(c.network || '')}</span></dd>
+        <dt>Protocol</dt><dd>x402 v2, scheme <span class="mono">${esc(c.scheme || 'exact')}</span>, paid in ${esc(c.asset || 'USDC')}</dd>
+        <dt>Facilitator</dt><dd>${esc(c.facilitator || '')}</dd>
+        <dt>Merchant wallet</dt><dd>${addrLink(c.payTo)}</dd>
+        <dt>AI Summary engine</dt><dd>${c.aiEngine === 'claude' ? 'Claude' : 'Local summariser (set ANTHROPIC_API_KEY to use Claude)'}</dd>
+        <dt>Status</dt><dd>${c.configured ? 'Configured' : '<span class="err">Not configured: set SOLANA_PAY_TO</span>'}</dd>
+      </dl></section>
+      <section class="card panel"><div class="panel-head"><h2>This device</h2></div>
+        <p class="note" style="margin-bottom:14px">Your activity and analytics are kept in this browser's local storage. Nothing about you is stored on the server.</p>
+        <div class="actions"><button class="btn danger" data-clear>Clear activity history</button></div>
+      </section>
+    </div>`;
+}
+
+const PAGES = { home: pageHome, services: pageServices, activity: pageActivity, wallet: pageWallet, analytics: pageAnalytics, settings: pageSettings };
+const TITLES = { home: 'Home', services: 'Services', activity: 'Activity', wallet: 'Wallet', analytics: 'Analytics', settings: 'Settings' };
+
+function render() {
+  state.route = (location.hash.replace(/^#\//, '').split(/[?/]/)[0] || 'home').toLowerCase();
+  if (!PAGES[state.route]) state.route = 'home';
+  document.title = `${TITLES[state.route]} · Joyhavn`;
+  $('#content').innerHTML = PAGES[state.route]();
+  paintChrome();
+  if (state.route === 'wallet') fillWallet();
+}
+
+/* ---------------- run dialog ---------------- */
+const STEP_TITLES = ['Request the service', 'Payment required (HTTP 402)', 'Sign, verify and settle on Solana', 'Result unlocked'];
+const num = (n, o) => (n === null || n === undefined ? '–' : nf(n, o));
+const money = (n) => (n === null || n === undefined ? '–' : `$${nf(n, { maximumFractionDigits: n < 1 ? 4 : 2 })}`);
+const pct = (n) => (n === null || n === undefined ? '–' : `${n > 0 ? '+' : ''}${n}%`);
+
+function renderResult(id, payload) {
+  const r = payload?.result ?? payload;
+  let body = '';
+  if (id === 'url-safety-scan') {
+    const cls = r.level === 'high' ? 'bad' : r.level === 'medium' ? 'warn' : 'good';
+    body = `<div class="headline ${cls}">${esc(String(r.level).toUpperCase())} risk · score ${esc(r.score)}/100</div><p>${esc(r.verdict)}</p>${r.flags?.length ? `<ul>${r.flags.map((f) => `<li>${esc(f.detail)}</li>`).join('')}</ul>` : ''}<p class="note">${esc(r.method)}</p>`;
+  } else if (id === 'ai-summary') {
+    body = `<p>${esc(r.summary)}</p><div class="chips"><span class="chip">${esc(r.engine === 'claude' ? 'Claude' : 'Local summariser')}</span><span class="chip">${esc(r.originalWords)} → ${esc(r.summaryWords)} words</span></div>${r.note ? `<p class="note">${esc(r.note)}</p>` : ''}`;
+  } else if (id === 'data-snapshot') {
+    const up = (r.change24hPct ?? 0) >= 0;
+    body = `<div class="headline">${esc(r.asset.name)} (${esc(r.asset.symbol)}) · ${money(r.priceUsd)}</div><div class="chips"><span class="chip" style="color:${up ? 'var(--green)' : 'var(--red)'}">24h ${pct(r.change24hPct)}</span><span class="chip">7d ${pct(r.change7dPct)}</span>${r.asset.marketCapRank ? `<span class="chip">Rank #${esc(r.asset.marketCapRank)}</span>` : ''}</div><ul><li>24h high ${money(r.high24hUsd)} · low ${money(r.low24hUsd)}</li><li>Market cap ${money(r.marketCapUsd)}</li><li>24h volume ${money(r.volume24hUsd)}</li></ul><p class="note">Source: ${esc(r.source)} · as of ${esc(r.asOf ? new Date(r.asOf).toLocaleTimeString() : 'now')}</p>`;
+  } else if (id === 'json-validator') {
+    body = r.valid
+      ? `<div class="headline good">Valid JSON</div><div class="chips"><span class="chip">${esc(r.type)}</span><span class="chip">${esc(r.totalKeys)} keys</span><span class="chip">depth ${esc(r.depth)}</span><span class="chip">${esc(r.bytes)} bytes</span></div><pre class="json">${esc(r.formatted)}</pre>`
+      : `<div class="headline bad">Invalid JSON</div><p>${esc(r.error)}</p>${r.line ? `<div class="chips"><span class="chip">line ${esc(r.line)}, column ${esc(r.column)}</span><span class="chip">near ${esc(JSON.stringify(r.character))}</span></div>` : ''}`;
+  }
+  return `<div class="result">${body}<details><summary>Raw response</summary><pre class="json">${esc(JSON.stringify(payload, null, 2))}</pre></details></div>`;
+}
+
+function stepsHtml(steps) {
+  return steps
+    .map((s, i) => `<div class="step ${s.status}"><div class="n">${s.status === 'done' ? '✓' : s.status === 'error' ? '✕' : i + 1}</div><div><div class="t">${esc(STEP_TITLES[i])}</div><div class="d">${s.html || ''}</div></div></div>`)
+    .join('');
+}
+
+function openRun(id) {
+  const s = state.services.find((x) => x.id === id);
+  if (!s) return;
+  const dlg = $('#run');
+  dlg.dataset.id = id;
+  dlg.innerHTML = `
+    <div class="run-wrap">
+      <div class="run-head"><div class="ico">${svg(s.icon)}</div><div class="grow"><h2 id="run-title">${esc(s.name)}</h2><p>${esc(s.description)}</p></div><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+      <div class="run-body">
+        <label class="field">${esc(s.paramLabel)}<textarea id="run-input" rows="${s.id === 'ai-summary' ? 6 : s.id === 'data-snapshot' ? 1 : 3}" maxlength="${s.maxLen}" spellcheck="false">${esc(s.example)}</textarea></label>
+        <div class="actions"><button class="btn lime" data-go>Pay ${esc(s.price)} &amp; Run</button><button class="btn ghost" data-fail title="Sends a forged payment to show how failures are handled">Simulate failed payment</button></div>
+        <p class="note">You are charged only if the input is valid and the payment settles. Test USDC on Solana devnet.</p>
+        <div class="flow" id="run-flow" hidden></div>
+      </div>
+    </div>`;
+  if (!dlg.open) dlg.showModal();
+}
+
+async function runPay(kind) {
+  const dlg = $('#run');
+  const id = dlg.dataset.id;
+  const s = state.services.find((x) => x.id === id);
+  const input = $('#run-input').value;
+  const flow = $('#run-flow');
+  const btns = dlg.querySelectorAll('[data-go],[data-fail]');
+  btns.forEach((b) => (b.disabled = true));
+  const steps = STEP_TITLES.map(() => ({ status: 'idle', html: '' }));
+  const paint = () => {
+    flow.hidden = false;
+    flow.innerHTML = stepsHtml(steps);
+  };
+  steps[0] = { status: 'active', html: 'Calling the service…' };
+  paint();
+
+  let out;
+  try {
+    out = await api(`/api/demo/${kind}/${id}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ input }) });
+  } catch (err) {
+    steps[0] = { status: 'error', html: `<span class="err">${esc(err.message)}</span> You were not charged.` };
+    paint();
+    btns.forEach((b) => (b.disabled = false));
+    return;
+  }
+
+  const step = async (i, status, html, delay = 320) => {
+    steps[i] = { status, html };
+    if (status === 'done' && steps[i + 1]) steps[i + 1] = { status: 'active', html: '' };
+    paint();
+    await sleep(delay);
+  };
+  const record = (status, tx) => {
+    addHistory({ service: id, name: s.name, status, priceUsd: s.priceUsd, transaction: tx || null });
+    paintChrome();
+  };
+
+  if (kind === 'fail') {
+    await step(0, 'done', 'Sent the request with a forged payment signature.');
+    await step(1, 'done', 'Server answered <code>402 Payment Required</code>.');
+    await step(2, 'error', `Rejected by verification (HTTP ${esc(out.status)}): ${esc(out.error)}`, 0);
+    steps[3] = { status: 'error', html: 'Nothing was delivered and nothing was charged.' };
+    paint();
+    record('failed');
+  } else if (out.stage === 'request') {
+    await step(0, 'error', `<span class="err">${esc(out.error)}</span> You were not charged.`, 0);
+  } else {
+    const r = out.requirements;
+    await step(0, 'done', `Called <code>${esc(s.path)}</code> with no payment.`);
+    await step(1, 'done', r ? `Server asked for <strong>${esc(r.amountUsdc)} USDC</strong> on <code>${esc(short(r.network, 9))}</code> to <code>${esc(short(r.payTo))}</code> (scheme <code>${esc(r.scheme)}</code>).` : 'Payment requirements received.');
+    if (!out.ok) {
+      await step(2, 'error', `<span class="err">${esc(out.error)}</span>`, 0);
+      steps[3] = { status: 'error', html: 'No result was delivered.' };
+      paint();
+      record('failed');
+    } else {
+      await step(2, 'done', `Demo wallet <code>${esc(short(out.payer))}</code> signed; the facilitator verified and settled. Transaction ${txLink(out.settlement.transaction)}`);
+      await step(3, 'done', `Unlocked in ${esc(out.timings.payAndUnlockMs)} ms.${renderResult(id, out.result)}`, 0);
+      record('paid', out.settlement.transaction);
+    }
+  }
+  btns.forEach((b) => (b.disabled = false));
+  if (['home', 'activity', 'analytics'].includes(state.route)) {
+    const y = window.scrollY;
+    $('#content').innerHTML = PAGES[state.route]();
+    window.scrollTo(0, y);
+  }
+}
+
+/* ---------------- events ---------------- */
+document.addEventListener('click', async (e) => {
+  const t = e.target;
+  const run = t.closest('[data-run]');
+  if (run) return openRun(run.dataset.run);
+  if (t.closest('[data-go]')) return runPay('pay');
+  if (t.closest('[data-fail]')) return runPay('fail');
+  if (t.closest('[data-close]') || t === $('#run')) return $('#run').close();
+  const cp = t.closest('[data-copy]');
+  if (cp) {
+    try {
+      await navigator.clipboard.writeText(cp.dataset.copy);
+      toast('Address copied');
+    } catch {
+      toast('Could not copy. Select the address and copy it manually.');
+    }
+    return;
+  }
+  if (t.closest('[data-clear]')) {
+    if (confirm('Clear the activity history stored in this browser?')) {
+      store.set(KEY, []);
+      render();
+      toast('History cleared');
+    }
+    return;
+  }
+  if (t.closest('[data-refresh-wallet]')) {
+    $('#wallet-body').innerHTML = '<div class="loading">Reading balances from Solana devnet…</div>';
+    return fillWallet();
+  }
+  if (t.closest('.nav a, .brand')) $('#app').classList.remove('open');
+  if (t.closest('#menu-btn')) $('#app').classList.toggle('open');
+  if (t === $('#scrim')) $('#app').classList.remove('open');
+  if (t.closest('#bell')) {
+    const h = history();
+    store.set(SEEN, h[0]?.at || '');
+    paintChrome();
+    toast(h[0] ? `Latest: ${h[0].name} ${h[0].status === 'paid' ? 'unlocked' : 'was rejected'} ${ago(h[0].at)}` : 'No activity yet');
+  }
+});
+
+$('#search').addEventListener('input', (e) => {
+  state.query = e.target.value;
+  if (state.route !== 'services') location.hash = '#/services';
+  else render();
+});
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    $('#search').focus();
+  }
+  if (e.key === 'Escape') $('#app').classList.remove('open');
+});
+window.addEventListener('hashchange', render);
+
+/* ---------------- boot ---------------- */
+async function boot() {
+  try {
+    const [config, services] = await Promise.all([api('/api/config'), api('/api/services')]);
+    state.config = config;
+    state.services = services;
+    render();
+  } catch (err) {
+    paintChrome();
+    $('#content').innerHTML = `<div class="card panel"><h2>Can't reach the Joyhavn API</h2><p class="sub" style="font-size:15px">${esc(err.message)}</p><p class="note" style="margin:10px 0 16px">If this is a fresh deploy, check the Vercel function logs and environment variables.</p><button class="btn lime" onclick="location.reload()">Try again</button></div>`;
+  }
+}
+boot();
+
+</script>
+</body>
+</html>
