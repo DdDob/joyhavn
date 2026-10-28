@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Joyhavn: pay for tools only when you need them</title>
+  <meta name="description" content="Pay-per-request tools on Solana using x402. No subscription, no checkout." />
+  <meta name="theme-color" content="#060a09" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23060a09'/%3E%3Ctext x='8' y='24' font-family='Arial' font-weight='800' font-size='24' fill='%23b8f23d'%3EJ%3C/text%3E%3Ccircle cx='24' cy='23' r='2.4' fill='%23b8f23d'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#/home" aria-label="Joyhavn home">
+        <span class="brand-mark">J<i></i></span>
+        <span class="brand-name">joyhavn</span>
+      </a>
+      <nav class="nav" id="nav"></nav>
+      <div class="side-foot">
+        <div class="net-card">
+          <div class="net-row"><span class="dot" id="net-dot"></span><span id="net-name">Solana Network</span><span class="badge" id="net-badge">…</span></div>
+          <div class="net-wallet" id="net-wallet"></div>
+        </div>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" id="menu-btn" aria-label="Open menu" aria-controls="sidebar">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <label class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="search" type="search" placeholder="Search services, tools or anything..." autocomplete="off" />
+          <kbd>⌘ K</kbd>
+        </label>
+        <div class="top-right">
+          <div id="wallet-slot"></div>
+          <button class="icon-btn" id="bell" aria-label="Notifications" title="Latest activity">
+            <svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0"/></svg>
+            <span class="ping" id="ping" hidden></span>
+          </button>
+          <a class="profile" href="#/settings" aria-label="Settings">
+            <span class="avatar" id="avatar">B</span>
+            <span class="who"><b id="who-name">Guest</b><small id="who-addr">not connected</small></span>
+          </a>
+        </div>
+      </header>
+      <main class="content" id="content" tabindex="-1" aria-live="polite">
+        <div class="loading">Loading Joyhavn…</div>
+      </main>
+      <footer class="foot">
+        <span class="foot-l"><svg viewBox="0 0 24 24" class="sol"><path d="M5 8h13l-2 2.5H3zM5 13.5h13l-2 2.5H3zM8 19h13l-2-2.5H6z"/></svg> Powered by Solana <i>•</i> x402</span>
+        <span>Joyhavn v1.0.0</span>
+      </footer>
+    </div>
+  </div>
+
+  <dialog id="connect" class="run" aria-labelledby="connect-title"></dialog>
+  <dialog id="run" class="run" aria-labelledby="run-title"></dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
