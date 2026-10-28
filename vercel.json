@@ -1,0 +1,7 @@
+{
+  "outputDirectory": "public",
+  "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }],
+  "functions": {
+    "api/*.js": { "maxDuration": 30 }
+  }
+}
