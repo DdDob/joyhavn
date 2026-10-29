@@ -1,0 +1,22 @@
+# Joyhavn
+
+> Pay-per-request tools on Solana. Each endpoint answers HTTP 402 Payment Required with a price. Pay a few thousandths of a dollar in USDC using x402, and the same request returns the result. No accounts, no API keys.
+
+## For AI agents
+
+- Machine-readable catalog of tools, prices and payment details: /api/catalog
+- Network: Solana devnet (test USDC). Protocol: x402 v2, scheme "exact".
+- To buy a tool:
+  1. GET the tool URL from the catalog with no payment. You receive 402 and a `payment-required` header (base64 JSON) with the amount, USDC mint, merchant address and fee payer.
+  2. Build and sign a USDC transfer for exactly that amount (an x402 client such as @x402/fetch with @x402/svm does this for you).
+  3. Retry the same URL with the `PAYMENT-SIGNATURE` header. The response contains the result, and the `PAYMENT-RESPONSE` header carries the Solana transaction signature.
+- You are never charged unless the payment settles. Invalid input is rejected before any payment is requested.
+- Safety: no single request costs more than 0.05 USDC. Set a per-task spending cap in your agent.
+- Verify any payment on-chain: /api/receipt/<transaction-signature>
+
+## Tools
+
+- URL Safety Scan: check whether a link looks like phishing or a wallet drainer.
+- AI Summary: summarise text.
+- Data Snapshot: live crypto price, 24h change, volume and rank.
+- JSON Validator: validate and format JSON with exact error locations.
