@@ -421,6 +421,6 @@ MIT
 
 <div align="center">
 
-**Joyhavn: pay for tools only when you need them.**
+**Joyhavn: Every payment has a story. Verify yours on Solana.**
 
 </div>
