@@ -20,20 +20,20 @@
 
 ---
 
-## 🔗 Links
+##  Links
 
 | | |
 |---|---|
-| 🌐 **Live demo** (Solana devnet) | **[ADD YOUR LIVE URL, e.g. https://joyhavn.vercel.app]** |
-| 🎬 **Demo video** (2–4 min) | **[ADD YOUR VIDEO LINK]** |
-| 🧾 **Proof of a real payment** | **[ADD ONE SOLANA EXPLORER TRANSACTION LINK (devnet)]** |
-| 🏆 **Track** | Best Use of x402 on Solana, Encode Club |
+|  **Live demo** (Solana devnet) | **[ADD YOUR LIVE URL, e.g. https://joyhavn.vercel.app]** |
+|  **Demo video** (2–4 min) | **[ADD YOUR VIDEO LINK]** |
+|  **Proof of a real payment** | **[ADD ONE SOLANA EXPLORER TRANSACTION LINK (devnet)]** |
+|  **Track** | Best Use of x402 on Solana, Encode Club |
 
 > **Judges, the fastest way to try it:** open the live demo → **Services** → pick **JSON Validator ($0.003)** → **Connect wallet** → **Pay** → approve in your wallet → see the result and a public Solana receipt. Full steps in [Try it in 2 minutes](#-try-it-in-2-minutes).
 
 ---
 
-## 💡 The problem
+##  The problem
 
 Most useful online tools are worth **fractions of a cent per use**: checking a link, validating a file, fetching a price.
 
@@ -43,7 +43,7 @@ Today that forces a bad choice:
 - **Subscriptions and API keys are heavy.** You create an account, add a card and manage a key just to use something once.
 - **AI agents can't do it at all.** An autonomous agent can't fill in a sign-up form or enter card details, so the tools it needs are locked behind human onboarding.
 
-## ✨ The solution
+##  The solution
 
 Joyhavn turns every tool into a plain HTTPS endpoint with a **price per request**. The server answers with the standard HTTP status **`402 Payment Required`** (revived by [x402](https://x402.org)). The caller signs a small USDC transfer, **it settles on Solana**, and the result comes back in the same request.
 
@@ -59,7 +59,7 @@ No account was created. No key was issued. No card was charged. Every purchase h
 
 ---
 
-## 🧠 How Solana powers Joyhavn
+##  How Solana powers Joyhavn
 
 > Solana is not a login button here. **It is the gate, the cash register and the receipt.** Remove Solana and the product stops working.
 
@@ -85,7 +85,7 @@ No account was created. No key was issued. No card was charged. Every purchase h
 
 ---
 
-## 🚀 Try it in 2 minutes
+##  Try it in 2 minutes
 
 ### Option A: with your own wallet (the real flow)
 
@@ -114,7 +114,7 @@ You receive **`HTTP 402 Payment Required`** with a `payment-required` header des
 
 ---
 
-## 🧩 Features
+##  Features
 
 - **Real x402 v2 payments on Solana** using the `exact` scheme, paid in USDC.
 - **Bring your own wallet.** Phantom, Solflare and Backpack through the Wallet Standard on desktop, plus an encrypted **Safari → wallet app → back to Safari** flow on phones. No pasting keys or addresses.
@@ -132,14 +132,14 @@ You receive **`HTTP 402 Payment Required`** with a `payment-required` header des
 
 | Service | Endpoint | Price | What it does |
 |---|---|---|---|
-| 🔗 **URL Safety Scan** | `GET /api/v1/url-safety-scan?url=` | $0.005 | Heuristic phishing and wallet-drainer scoring for a link: a risk level, score and reasons. A signal, not a guarantee. |
-| 📝 **AI Summary** | `GET /api/v1/ai-summary?text=` | $0.008 | Concise summary of text. Uses Claude when configured, otherwise a built-in summariser, so it never fails after payment. |
-| 📊 **Data Snapshot** | `GET /api/v1/data-snapshot?asset=` | $0.01 | Live crypto price, 24h and 7d change, volume and rank (CoinGecko public API). |
-| 🧪 **JSON Validator** | `GET /api/v1/json-validator?json=` | $0.003 | Validates and formats JSON; reports the exact line and column of an error. |
+|  **URL Safety Scan** | `GET /api/v1/url-safety-scan?url=` | $0.005 | Heuristic phishing and wallet-drainer scoring for a link: a risk level, score and reasons. A signal, not a guarantee. |
+|  **AI Summary** | `GET /api/v1/ai-summary?text=` | $0.008 | Concise summary of text. Uses Claude when configured, otherwise a built-in summariser, so it never fails after payment. |
+|  **Data Snapshot** | `GET /api/v1/data-snapshot?asset=` | $0.01 | Live crypto price, 24h and 7d change, volume and rank (CoinGecko public API). |
+|  **JSON Validator** | `GET /api/v1/json-validator?json=` | $0.003 | Validates and formats JSON; reports the exact line and column of an error. |
 
 ---
 
-## 🤖 Agent mode: AI agents that pay for their own tools
+##  Agent mode: AI agents that pay for their own tools
 
 Machine-to-machine micro-purchases are exactly what cards and accounts cannot do and **Solana plus x402 can**.
 
@@ -153,7 +153,7 @@ The agent's wallet is a Solana keypair generated in the browser (WebCrypto Ed255
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```mermaid
 flowchart LR
@@ -211,7 +211,7 @@ On mobile, wallet extensions don't exist in Safari, so Joyhavn uses the wallets'
 
 ---
 
-## 🛡️ Failed payments and fairness
+##  Failed payments and fairness
 
 **Nothing is delivered and nothing is charged unless the payment settles on Solana.**
 
@@ -230,7 +230,7 @@ The UI includes a **Simulate failed payment** button that sends a forged payment
 
 ---
 
-## 🔒 Security and safety design
+##  Security and safety design
 
 - **Non-custodial.** No user funds or keys are ever held by the server. The wallet signs every payment.
 - **Spend limits.** No single request may exceed **0.05 USDC**, and the agent enforces a per-task cap before buying.
@@ -243,7 +243,7 @@ The UI includes a **Simulate failed payment** button that sends a forged payment
 
 ---
 
-## 📁 Project structure
+##  Project structure
 
 ```text
 joyhavn/
@@ -279,7 +279,7 @@ joyhavn/
 
 ---
 
-## 🧰 Tech stack
+##  Tech stack
 
 | Layer | Technology |
 |---|---|
@@ -293,7 +293,7 @@ joyhavn/
 
 ---
 
-## ⚙️ Setup & run locally
+##  Setup & run locally
 
 ### Prerequisites
 
@@ -359,7 +359,7 @@ Check `http://localhost:4021/api/health`. You should see `"configured":true`.
 
 ---
 
-## ✅ Testing
+##  Testing
 
 ```bash
 npm test
@@ -378,7 +378,7 @@ You can also pay from the command line with the included x402 buyer, e.g. `npm r
 
 ---
 
-## 🧭 Limitations (honest ones)
+##  Limitations (honest ones)
 
 - **Devnet only.** All money is test USDC. Moving to mainnet means switching the network and USDC mint and using a production facilitator.
 - **URL Safety Scan is heuristic.** It scores lexical and structural risk signals; it is not a reputation database and not a guarantee.
@@ -386,7 +386,7 @@ You can also pay from the command line with the included x402 buyer, e.g. `npm r
 - **The agent's planner is intentionally simple** (rules, or Claude if configured) and the services are deliberately small. The focus is the **payment-to-access flow**, which is reusable for any API.
 - **Phone wallet flow** relies on the wallets' universal links. If an in-app browser blocks the redirect, open the site in Safari or inside the wallet's browser.
 
-## 🗺️ Roadmap
+##  Roadmap
 
 - **Publish your own API**: a self-serve registry where any developer lists an endpoint and a price and gets paid on-chain.
 - **Agent spending policies**: per-tool allow-lists, daily budgets and approval thresholds.
@@ -396,7 +396,7 @@ You can also pay from the command line with the included x402 buyer, e.g. `npm r
 
 ---
 
-## 🎯 How Joyhavn maps to the judging criteria
+##  How Joyhavn maps to the judging criteria
 
 | Criterion | Where to see it |
 |---|---|
@@ -411,11 +411,11 @@ You can also pay from the command line with the included x402 buyer, e.g. `npm r
 
 ---
 
-## 🙏 Acknowledgements
+##  Acknowledgements
 
 Built for the **Encode Club** Solana hackathon. Thanks to the [x402](https://x402.org) team and the open-source Solana ecosystem, to [tweetnacl-js](https://github.com/dchest/tweetnacl-js) (public domain) for the phone-flow encryption, and to CoinGecko for the public market-data API.
 
-## 📄 License
+##  License
 
 MIT
 
