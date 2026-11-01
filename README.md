@@ -24,7 +24,7 @@
 
 | | |
 |---|---|
-|  **Live demo** (Solana devnet) | https://joyhavn.vercel.app]** |
+|  **Live demo** (Solana devnet) | https://joyhavn.vercel.app] |
 |  **Demo video** (2–4 min) | **[ADD YOUR VIDEO LINK]** |
 |  **Proof of a real payment** | **[ADD ONE SOLANA EXPLORER TRANSACTION LINK (devnet)]** |
 |  **Track** | Best Use of x402 on Solana, Encode Club |
