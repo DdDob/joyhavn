@@ -25,7 +25,7 @@ https://x.com/joyhavn?s=11**
 
 | | |
 |---|---|
-|  **Live demo** (Solana devnet) | https://joyhavn.vercel.app] |
+|  **Live demo** (Solana devnet) | https://joyhavn.vercel.app |
 |  **Demo video** (2–4 min) | (https://youtu.be/G8jZFadSh-w?si=R7DP6F-zVzIyPDZS) |
 |  **Proof of a real payment** | (https://explorer.solana.com/tx/61FvBbCwf41icu6XpunycAqmqhxQjHvKAbZD6nLBKTaHZDzR4TEnsFkNtJUHQ6xn43VPaUndmNxqBKAXhCPhpLEE?cluster=devnet) |
 |  **Track** | Best Use of x402 on Solana, Encode Club |
