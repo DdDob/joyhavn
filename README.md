@@ -6,7 +6,8 @@
 
 ### Pay for tools only when you need them.
 
-**A pay-per-request API marketplace on Solana, powered by x402. Humans and AI agents pay a fraction of a cent in USDC over plain HTTP. The payment *is* the access control. No accounts. No API keys. No subscriptions.**
+**A pay-per-request API marketplace on Solana, powered by x402. Humans and AI agents pay a fraction of a cent in USDC over plain HTTP. The payment *is* the access control. No accounts. No API keys. No subscriptions.
+https://x.com/joyhavn?s=11**
 
 ![Solana](https://img.shields.io/badge/Solana-devnet-b8f23d?style=for-the-badge&logo=solana&logoColor=black)
 ![x402](https://img.shields.io/badge/x402-v2%20exact%20scheme-0b0f0e?style=for-the-badge)
@@ -25,7 +26,7 @@
 | | |
 |---|---|
 |  **Live demo** (Solana devnet) | https://joyhavn.vercel.app] |
-|  **Demo video** (2–4 min) |  |
+|  **Demo video** (2–4 min) | [ ](https://youtu.be/G8jZFadSh-w?si=R7DP6F-zVzIyPDZS) |
 |  **Proof of a real payment** | (https://explorer.solana.com/tx/61FvBbCwf41icu6XpunycAqmqhxQjHvKAbZD6nLBKTaHZDzR4TEnsFkNtJUHQ6xn43VPaUndmNxqBKAXhCPhpLEE?cluster=devnet) |
 |  **Track** | Best Use of x402 on Solana, Encode Club |
 
